@@ -1,0 +1,29 @@
+# Illustrative medallion data product (see the artefact design).
+product: customer_orders
+
+sources:
+  orders:
+    format: csv
+    path: data/raw/orders/*.csv
+    columns:
+      order_id: integer
+      customer_id: integer
+      amount: decimal
+
+layers:
+  bronze:
+    schema: raw
+    load: [orders]
+  silver:
+    schema: clean
+    depends_on: [bronze]
+  gold:
+    schema: analytics
+    depends_on: [silver]
+
+orchestration:
+  schedule: "0 6 * * *"
+
+targets:
+  database: duckdb
+  orchestrator: airflow

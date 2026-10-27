@@ -1,0 +1,4 @@
+customer_id,email,signed_up_on,lifetime_value
+100,a@example.com,2024-05-01,45.49
+101,b@example.com,2024-06-14,162.00
+102,c@example.com,2024-11-30,7.25

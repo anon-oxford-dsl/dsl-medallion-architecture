@@ -1,0 +1,51 @@
+# A larger scenario: three sources and a non-linear (diamond) layer graph.
+# Used as the high end of the evaluation scenarios, and to show that the layer
+# model is a general acyclic graph rather than a fixed bronze/silver/gold triad.
+product: retail_analytics
+
+sources:
+  orders:
+    format: csv
+    path: data/raw/retail_orders/*.csv
+    columns:
+      order_id: bigint
+      customer_id: bigint
+      store_id: integer
+      ordered_at: timestamp
+      amount: decimal
+      is_returned: boolean
+  customers:
+    format: csv
+    path: data/raw/customers/*.csv
+    columns:
+      customer_id: bigint
+      email: string
+      signed_up_on: date
+      lifetime_value: decimal
+  stores:
+    format: csv
+    path: data/raw/stores/*.csv
+    columns:
+      store_id: integer
+      region: string
+      opened_on: date
+
+layers:
+  bronze:
+    load: [orders, customers, stores]
+  silver_orders:
+    depends_on: [bronze]
+  silver_customers:
+    depends_on: [bronze]
+  silver_stores:
+    depends_on: [bronze]
+  gold:
+    depends_on: [silver_orders, silver_customers, silver_stores]
+
+orchestration:
+  schedule: "0 4 * * *"
+  start_date: "2025-01-01"
+
+targets:
+  database: duckdb
+  orchestrator: airflow

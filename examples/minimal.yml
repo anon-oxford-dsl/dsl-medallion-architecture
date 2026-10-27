@@ -1,0 +1,22 @@
+# Smallest specification the framework accepts: one source, one layer.
+# Used as the low end of the evaluation scenarios.
+product: pageviews
+
+sources:
+  pageviews:
+    format: csv
+    path: data/raw/pageviews/*.csv
+    columns:
+      viewed_at: timestamp
+      url: string
+
+layers:
+  bronze:
+    load: [pageviews]
+
+orchestration:
+  schedule: "@daily"
+
+targets:
+  database: duckdb
+  orchestrator: airflow

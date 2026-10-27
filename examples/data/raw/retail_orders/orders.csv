@@ -1,0 +1,4 @@
+order_id,customer_id,store_id,ordered_at,amount,is_returned
+1,100,1,2025-01-02 11:00:00,29.99,false
+2,101,2,2025-01-02 12:30:00,120.00,false
+3,102,1,2025-01-03 09:15:00,7.25,true

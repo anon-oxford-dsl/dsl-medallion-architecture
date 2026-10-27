@@ -1,0 +1,112 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.org/medallion/spec.schema.json",
+  "title": "Medallion product specification",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["product", "sources", "layers", "orchestration", "targets"],
+  "properties": {
+    "product": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*$",
+      "description": "Lowercase identifier for the data product."
+    },
+    "sources": {
+      "type": "object",
+      "minProperties": 1,
+      "description": "Declared raw inputs, keyed by source name.",
+      "propertyNames": { "pattern": "^[a-z][a-z0-9_]*$" },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["format", "path", "columns"],
+        "properties": {
+          "format": { "enum": ["csv"] },
+          "path": { "type": "string", "minLength": 1 },
+          "columns": {
+            "type": "object",
+            "minProperties": 1,
+            "description": "Ordered map of column name to abstract type.",
+            "propertyNames": { "pattern": "^[A-Za-z_][A-Za-z0-9_]*$" },
+            "additionalProperties": {
+              "enum": [
+                "integer",
+                "bigint",
+                "decimal",
+                "double",
+                "float",
+                "string",
+                "boolean",
+                "date",
+                "timestamp",
+                "time"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "layers": {
+      "type": "object",
+      "minProperties": 1,
+      "description": "Medallion layers, keyed by layer name; form an acyclic depends_on graph.",
+      "propertyNames": { "pattern": "^[a-z][a-z0-9_]*$" },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$",
+            "description": "Physical database schema for this layer; defaults to the layer name."
+          },
+          "load": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Source names ingested into this layer (makes it a table-bearing layer)."
+          },
+          "depends_on": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Names of upstream layers."
+          }
+        }
+      }
+    },
+    "orchestration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schedule"],
+      "properties": {
+        "schedule": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Cron expression passed straight to the generated DAG."
+        },
+        "start_date": {
+          "type": "string",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+          "description": "ISO date; defaults to 2024-01-01 for deterministic output."
+        },
+        "dbt_command": {
+          "enum": ["build", "run"],
+          "description": "dbt subcommand each layer task invokes; defaults to build, which also runs tests."
+        }
+      }
+    },
+    "targets": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["database", "orchestrator"],
+      "properties": {
+        "database": { "enum": ["duckdb"] },
+        "orchestrator": { "enum": ["airflow"] },
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Database file, relative to the generated product directory; defaults to <product>.duckdb."
+        }
+      }
+    }
+  }
+}
